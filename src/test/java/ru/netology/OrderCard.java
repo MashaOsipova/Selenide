@@ -1,5 +1,7 @@
 package ru.netology;
 
+import com.codeborne.selenide.Condition;
+import com.codeborne.selenide.Selectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -187,17 +189,24 @@ public class OrderCard {
     }
 
     @Test
-    void shouldChooseCityFromPopupWindowTest() {
-        $("[data-test-id='city']").$("[placeholder='Город']").setValue("Са");
-//        $("[class= 'popup__container']").shouldBe(visible);  ?? Проверка на видимость всплывающего окна
-//        TODO Проверка на работу прокрутки  ???
-        $$("[class='menu-item__control']").find(exactText("Санкт-Петербург")).click();
-        $("[data-test-id='date']").$("[placeholder='Дата встречи']").setValue(formatDeliveryDate(3));
-        $("[data-test-id= 'name']").$("[name ='name']").setValue("Михаил Иванов");
-        $("[data-test-id='phone']").$("[name='phone']").setValue("+71234567890");
-        $("[data-test-id='agreement']").click();
-        $$("button").find(exactText("Забронировать")).click();
-        $("[data-test-id='notification']").shouldBe(visible, Duration.ofSeconds(15)).
-                shouldHave(exactText("Успешно!\n" + "Встреча успешно забронирована на " + formatDeliveryDate(3)));
+    public void shouldSuccessfulFormSubmissionAfterInteractingWithComplexElements() {
+        open("http://localhost:9999");
+        $("[data-test-id=city] input").setValue("Че");
+        $(Selectors.byText("Черкесск")).click();
+        $("[data-test-id=date] input").click();
+        int days = 4;
+        for ( int cycle = 0; cycle < days; cycle++) {
+            $(".calendar").sendKeys(Keys.ARROW_RIGHT);
+        }
+        $(".calendar").sendKeys(Keys.ENTER);
+        $("[data-test-id=name] input").setValue("Михаил Иванов");
+        $("[data-test-id=phone] input").setValue("+79014345676");
+        $("[data-test-id=agreement]").click();
+        $(".button").shouldHave(Condition.text("Забронировать")).click();
+        String verificationDate = LocalDate.now().plusDays(7)           
+                .format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        $("[data-test-id=notification]")
+                .shouldHave(Condition.text("Успешно! Встреча успешно забронирована на " + verificationDate),
+                        Duration.ofSeconds(15));
     }
 }
